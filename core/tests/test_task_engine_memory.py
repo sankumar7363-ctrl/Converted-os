@@ -5,66 +5,28 @@ from core.task_engine.task_engine import TaskEngine
 from memory.store import MemoryStore
 
 
-print("\n=== TASK ENGINE MEMORY TEST ===")
+def test_task_engine_uses_previous_memory():
+    fd, database_path = tempfile.mkstemp(suffix=".db")
+    os.close(fd)
 
+    try:
+        memory = MemoryStore(database_path=database_path)
 
-# Use an isolated temporary database.
-fd, database_path = tempfile.mkstemp(
-    suffix=".db"
-)
-os.close(fd)
+        memory.remember_experience(
+            goal="Create a webpage",
+            success=True,
+            summary="Created HTML and CSS files successfully.",
+        )
 
-try:
-    memory = MemoryStore(
-        database_path=database_path
-    )
+        engine = TaskEngine(memory=memory)
 
-    # Store previous successful experience.
-    memory.remember_experience(
-        goal="Create a webpage",
-        success=True,
-        summary="Created HTML and CSS files successfully.",
-    )
+        task = engine.create_task("Create a webpage")
 
-    print(
-        "[TEST] Previous experience stored"
-    )
+        workflow = engine.plan_task(task)
 
-    # Create TaskEngine using this isolated memory.
-    engine = TaskEngine(
-        memory=memory
-    )
+        assert len(workflow.steps) > 0
+        assert workflow.experience_used is True
 
-    task = engine.create_task(
-        "Create a webpage"
-    )
-
-    workflow = engine.plan_task(
-        task
-    )
-
-    assert len(workflow.steps) > 0
-
-    assert workflow.experience_used is True
-
-    print(
-        "[TEST] Previous experience retrieved"
-    )
-
-    print(
-        "[TEST] Planner used previous experience"
-    )
-
-    print(
-        f"[TEST] Workflow contains "
-        f"{len(workflow.steps)} steps"
-    )
-
-finally:
-    if os.path.exists(database_path):
-        os.remove(database_path)
-
-
-print(
-    "\n=== TASK ENGINE MEMORY TEST PASSED ==="
-)
+    finally:
+        if os.path.exists(database_path):
+            os.remove(database_path)

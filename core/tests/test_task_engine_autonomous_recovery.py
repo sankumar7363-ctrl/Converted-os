@@ -19,11 +19,6 @@ class FakeAutonomousAI(AIModel):
     def generate(self, prompt: str) -> str:
 
         if "recovery planner" in prompt.lower():
-
-            print(
-                "[FAKE AI] Generating recovery plan"
-            )
-
             return """
 {
     "goal": "Recover failed task step",
@@ -66,18 +61,11 @@ class FakeAutonomousAI(AIModel):
 """
 
 
-def main():
-
-    print(
-        "\n=== TASK ENGINE AUTONOMOUS RECOVERY TEST ===\n"
-    )
-
-    workspace = (
-        "workspace/task_engine_autonomous_recovery"
-    )
+def test_task_engine_autonomous_recovery(tmp_path):
+    workspace = tmp_path / "task_engine_autonomous_recovery"
 
     file_tools = FileTools(
-        workspace=workspace
+        workspace=str(workspace)
     )
 
     tool_system = ToolSystem()
@@ -125,82 +113,24 @@ def main():
         task
     )
 
-    print(
-        "\n[TEST] Final task status:",
-        task.status,
-    )
-
-    print(
-        "[TEST] Final results:"
-    )
-
-    for result in results:
-        print(result)
-
-    first_file = (
-        Path(workspace)
-        / "first.txt"
-    )
-
-    recovered_file = (
-        Path(workspace)
-        / "recovered.txt"
-    )
+    first_file = workspace / "first.txt"
+    recovered_file = workspace / "recovered.txt"
 
     assert first_file.exists()
     assert recovered_file.exists()
 
-    assert (
-        first_file.read_text(
-            encoding="utf-8"
-        )
-        == "Created first"
-    )
+    assert first_file.read_text(
+        encoding="utf-8"
+    ) == "Created first"
 
-    assert (
-        recovered_file.read_text(
-            encoding="utf-8"
-        )
-        == "Recovered by TaskEngine"
-    )
+    assert recovered_file.read_text(
+        encoding="utf-8"
+    ) == "Recovered by TaskEngine"
 
-    assert (
-        task.status
-        == TaskStatus.COMPLETED
-    )
+    assert task.status == TaskStatus.COMPLETED
 
-    assert (
-        task.result
-        == "Task execution completed successfully."
+    assert task.result == (
+        "Task execution completed successfully."
     )
 
     assert len(results) == 4
-
-    print(
-        "\n[TEST] TaskEngine created the task"
-    )
-
-    print(
-        "[TEST] Autonomous agent executed the plan"
-    )
-
-    print(
-        "[TEST] Failed step triggered recovery"
-    )
-
-    print(
-        "[TEST] Recovery created the expected file"
-    )
-
-    print(
-        "[TEST] TaskEngine marked the task COMPLETED"
-    )
-
-    print(
-        "\n=== TASK ENGINE AUTONOMOUS "
-        "RECOVERY TEST PASSED ==="
-    )
-
-
-if __name__ == "__main__":
-    main()

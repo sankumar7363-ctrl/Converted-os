@@ -2,73 +2,46 @@ from core.models.task import TaskStatus
 from core.task_engine.task_engine import TaskEngine
 
 
-print("\n=== TASK ENGINE TEST ===")
+def test_task_creation_and_status_flow():
+    engine = TaskEngine()
 
-engine = TaskEngine()
+    task = engine.create_task("Create a webpage")
 
+    assert task.goal == "Create a webpage"
+    assert task.status == TaskStatus.CREATED
 
-# 1. Create task
-task = engine.create_task("Create a webpage")
+    engine.set_status(task, TaskStatus.PLANNING)
+    assert task.status == TaskStatus.PLANNING
 
-assert task.goal == "Create a webpage"
-assert task.status == TaskStatus.CREATED
+    engine.set_status(task, TaskStatus.EXECUTING)
+    assert task.status == TaskStatus.EXECUTING
 
-print("[TEST] Task creation verified")
+    engine.set_status(task, TaskStatus.VERIFYING)
+    assert task.status == TaskStatus.VERIFYING
 
+    engine.complete_task(
+        task,
+        result="Webpage created successfully",
+    )
 
-# 2. Move to planning
-engine.set_status(task, TaskStatus.PLANNING)
-
-assert task.status == TaskStatus.PLANNING
-
-print("[TEST] Planning status verified")
-
-
-# 3. Move to executing
-engine.set_status(task, TaskStatus.EXECUTING)
-
-assert task.status == TaskStatus.EXECUTING
-
-print("[TEST] Executing status verified")
+    assert task.status == TaskStatus.COMPLETED
+    assert task.result == "Webpage created successfully"
 
 
-# 4. Move to verifying
-engine.set_status(task, TaskStatus.VERIFYING)
+def test_task_failure():
+    engine = TaskEngine()
 
-assert task.status == TaskStatus.VERIFYING
+    failed_task = engine.create_task("Run a failing task")
 
-print("[TEST] Verifying status verified")
+    engine.set_status(
+        failed_task,
+        TaskStatus.EXECUTING,
+    )
 
+    engine.fail_task(
+        failed_task,
+        error="Test failure",
+    )
 
-# 5. Complete task
-engine.complete_task(
-    task,
-    result="Webpage created successfully"
-)
-
-assert task.status == TaskStatus.COMPLETED
-assert task.result == "Webpage created successfully"
-
-print("[TEST] Task completion verified")
-
-
-# 6. Test failure path separately
-failed_task = engine.create_task("Run a failing task")
-
-engine.set_status(
-    failed_task,
-    TaskStatus.EXECUTING
-)
-
-engine.fail_task(
-    failed_task,
-    error="Test failure"
-)
-
-assert failed_task.status == TaskStatus.FAILED
-assert failed_task.result == "Test failure"
-
-print("[TEST] Task failure verified")
-
-
-print("\n=== TASK ENGINE TEST PASSED ===")
+    assert failed_task.status == TaskStatus.FAILED
+    assert failed_task.result == "Test failure"
