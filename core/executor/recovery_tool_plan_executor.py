@@ -458,9 +458,17 @@ Rules:
                 )
             )
 
-            return observations + [
-                recovery_observation
-            ]
+            # Recovery succeeded, so continue with the remaining
+            # original workflow steps. The recovery action replaces
+            # only the failed step; it does not terminate the workflow.
+            return self._continue_remaining(
+                task_id=task_id,
+                plan=plan,
+                observations=observations + [
+                    recovery_observation
+                ],
+                next_index=failed_step.step_index + 1,
+            )
 
         except Exception as error:
 
