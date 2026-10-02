@@ -1,3 +1,11 @@
+from memory.store import MemoryStore
+
+from core.models.experience import (
+    Experience,
+    ExperienceStep,
+    OutcomeStatus,
+)
+from memory.store import MemoryStore
 from core.learning.learning_engine import LearningEngine
 from core.models.experience import OutcomeStatus
 
@@ -144,3 +152,47 @@ def test_find_relevant_experiences(tmp_path):
     assert len(results) == 1
     assert results[0]["type"] == "experience"
     assert "Create a web page" in results[0]["content"]
+
+def test_store_experience_persists_step_details(tmp_path):
+    database_path = tmp_path / "step_details.db"
+    memory = MemoryStore(database_path=str(database_path))
+    engine = LearningEngine(memory=memory)
+
+    experience = Experience(
+        goal="Create a webpage",
+        steps=[
+            ExperienceStep(
+                step_index=0,
+                description="Create HTML file",
+                tool_name="create_file",
+                success=True,
+            ),
+            ExperienceStep(
+                step_index=1,
+                description="Start web server",
+                tool_name="start_server",
+                success=False,
+                error="Port already in use",
+            ),
+        ],
+        outcome=OutcomeStatus.PARTIAL,
+        summary="Task completed partially.",
+        recovery_used=True,
+    )
+
+    engine.store_experience(experience)
+
+    memories = memory.get_all()
+
+    assert len(memories) == 1
+
+    content = memories[0]["content"]
+
+    assert "Step 0: Create HTML file" in content
+    assert "Tool: create_file" in content
+    assert "Success: True" in content
+
+    assert "Step 1: Start web server" in content
+    assert "Tool: start_server" in content
+    assert "Success: False" in content
+    assert "Error: Port already in use" in content

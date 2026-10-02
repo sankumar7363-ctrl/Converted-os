@@ -91,7 +91,11 @@ class LearningEngine:
             learning_signal=learning_signal,
         )
 
-    def store_experience(self, experience: Experience):
+    def store_experience(
+        self,
+        experience: Experience,
+    ):
+
         learning_content = (
             f"Goal: {experience.goal} | "
             f"Outcome: {experience.outcome.value} | "
@@ -99,12 +103,43 @@ class LearningEngine:
             f"Recovery used: {experience.recovery_used}"
         )
 
-        if experience.learning_signal is not None:
+        if experience.steps:
+
+            step_details = []
+
+            for step in experience.steps:
+
+                step_text = (
+                    f"Step {step.step_index}: "
+                    f"{step.description} | "
+                    f"Tool: {step.tool_name} | "
+                    f"Success: {step.success}"
+                )
+
+                if step.error:
+
+                    step_text += (
+                        f" | Error: {step.error}"
+                    )
+
+                step_details.append(
+                    step_text
+                )
+
             learning_content += (
-                f" | Learning: {experience.learning_signal.reason}"
+                " | Steps: "
+                + " || ".join(step_details)
+            )
+
+        if experience.learning_signal is not None:
+
+            learning_content += (
+                f" | Learning: "
+                f"{experience.learning_signal.reason}"
             )
 
             if experience.learning_signal.improvement:
+
                 learning_content += (
                     f" | Improvement: "
                     f"{experience.learning_signal.improvement}"

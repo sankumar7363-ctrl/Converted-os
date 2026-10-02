@@ -115,15 +115,26 @@ class TaskEngine:
             if self.autonomous_agent is not None:
                 print("[TASK ENGINE] Using autonomous recovery agent")
 
+                memories = self.learning_engine.find_relevant_experiences(
+                    goal=task.goal
+                )
+
+                print(
+                    f"[TASK ENGINE] "
+                    f"Relevant experiences for execution: "
+                    f"{len(memories)}"
+                )
+
                 results = self.autonomous_agent.run(
                     task_id=task.id,
                     goal=task.goal,
+                    memories=memories,
                 )
             else:
                 results = self.tool_agent.run(
-                    task_id=task.id,
-                    goal=task.goal,
-                )
+                task_id=task.id,
+                goal=task.goal,
+            )
 
         except Exception as error:
             self.fail_task(task, error=str(error))

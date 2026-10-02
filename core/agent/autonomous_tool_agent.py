@@ -54,14 +54,28 @@ class AutonomousToolAgent:
         self,
         task_id: str,
         goal: str,
+        memories: list | None = None,
     ) -> list[Any]:
 
         print(
             f"\n[AUTONOMOUS AGENT] Goal: {goal}"
         )
 
+        if memories:
+            print(
+                f"[AUTONOMOUS AGENT] "
+                f"Using {len(memories)} relevant "
+                f"experience(s)"
+            )
+        else:
+            print(
+                "[AUTONOMOUS AGENT] "
+                "No previous experiences provided"
+            )
+
         plan = self.planner.create_plan(
-            goal
+            goal=goal,
+            memories=memories,
         )
 
         print(
